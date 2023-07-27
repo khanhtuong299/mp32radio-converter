@@ -15,12 +15,25 @@ pub fn greet(name: &str) -> String {
 
 #[tauri::command]
 pub fn on_drop(path: &str) -> String {
-  println!("received command on_drop");
   music_processing::reset_state();
-  music_processing::on_input(path).to_string()
+  music_processing::on_input(path)
 }
 
 #[tauri::command]
-pub fn play_music() -> String {
-    music_processing::play_music()
+pub fn play_music2() -> bool {
+    music_processing::on_play()
+}
+
+#[tauri::command]
+pub fn pause_music() -> bool {
+    music_processing::on_pause()
+}
+
+#[tauri::command]
+pub fn stop_music() -> bool {
+    music_processing::on_stop()
+}
+
+pub fn init_processing(){
+  music_processing::init_processing()
 }

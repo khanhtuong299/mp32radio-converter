@@ -3,11 +3,14 @@
 mod api;
 
 fn main() {
+  api::init_processing();
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![
       api::greet
       ,api::on_drop
-      ,api::play_music])
+      ,api::play_music2
+      ,api::pause_music
+      ,api::stop_music])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
