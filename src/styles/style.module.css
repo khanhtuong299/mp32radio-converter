@@ -1,5 +1,6 @@
 .playmusic {
   display: flex;
+  margin-bottom: 10px;
 }
 
 .musicanimation {
@@ -30,11 +31,28 @@
           animation-delay: 0.4s;
 }
 
+.control {
+  display: none;
+}
+
+.radioheader {
+  font-size: 20px;
+  letter-spacing: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.songname{
+  font-size: 20px;
+}
+
 .musictoggle {
   cursor: pointer;
   font-size: 20px;
   position: flex;
   text-align: center;
+  margin-top: 5px;
+  white-space: pre-line;
 }
 .musictoggle:after {
   content: "";
@@ -42,11 +60,11 @@
   height: 1px;
   width: 0;
   background-color: #000;
-  position: absolute;
+  /* position: absolute; */
   transition: 0.5s;
 }
 .musictoggle:hover:after {
-  width: 50%;
+  width: 100%;
 }
 
 .bar {

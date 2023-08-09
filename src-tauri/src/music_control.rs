@@ -1,3 +1,4 @@
+#[path = "music_2_radio.rs"] mod music2radio;
 
 use std::{path::Path, fs::File};
 use lazy_static::lazy_static;
@@ -9,6 +10,7 @@ use std::sync::{Mutex, Once};
 struct GlobalState {
     song_name: String,
     playing_name: String,
+    radio_path: String,
     path: String,
     is_playable:bool,
     is_coverted:bool,
@@ -18,7 +20,9 @@ struct GlobalState {
 #[derive(Clone)] #[derive(Debug)]
 enum PlayerState {
     Play,
+    PlayRadio,
     Pause,
+    PauseRadio,
     Stop,
     Reset,
     Init
@@ -31,7 +35,6 @@ struct AudioPlayer {
 
 impl GlobalState {
     fn set_state(&mut self, state:PlayerState) {
-        // println!("tuong current state {:?}", state);
         self.state = state
     }
     fn get_state(&self)->PlayerState {
@@ -41,12 +44,17 @@ impl GlobalState {
     fn get_file_path(&self) -> String {        
         Path::new(&(self.path)).to_str().unwrap().to_string()
     }
+
+    fn get_song_name(&self) -> String {
+        self.song_name.clone()
+    }
 }
 
 lazy_static!{
     static ref GLOBAL_STATE: Mutex<GlobalState> = Mutex::new(GlobalState{
         song_name: String::from("tmp"),
         playing_name: String::from("tmp"),
+        radio_path: String::from("tmp"),
         path: String::from("./"),
         is_playable:false,
         is_coverted:false,
@@ -152,18 +160,63 @@ fn init_audio_player() -> &'static Mutex<AudioPlayer> {
 //     sink
 // }
 
-pub fn on_play() -> bool{
+pub fn on_play() -> bool {
+    on_play_iml(false)
+}
+
+pub fn on_play_radio() -> bool {
+    on_play_iml(true)
+}
+
+fn on_play_iml(radio:bool) -> bool{
 
     let audio_player = init_audio_player().lock().unwrap();
     let mut cur_state = GLOBAL_STATE.lock().unwrap();
 
-    if let PlayerState::Pause = cur_state.get_state() {
-        audio_player.sink.play();
-        cur_state.set_state(PlayerState::Play);
-        return true;
+    match cur_state.get_state() {
+        PlayerState::Pause => {
+            audio_player.sink.play();
+            if radio {
+                
+                audio_player.sink.stop();
+            } else {
+                cur_state.set_state(PlayerState::Play);
+                return true;
+            }
+        },
+        PlayerState::PauseRadio => {
+            audio_player.sink.play();
+            if !radio {
+                audio_player.sink.stop();
+            } else {
+                audio_player.sink.play();
+                cur_state.set_state(PlayerState::PlayRadio);
+                return true;
+            }
+        },
+        PlayerState::PlayRadio => {
+            if radio {
+                return true;
+            } else {
+                audio_player.sink.stop();
+            }
+        },
+        PlayerState::Play => {
+            if !radio {
+                return true;
+            } else {
+                audio_player.sink.stop();
+            }
+        },
+        _ => {}
     }
 
-    let path: String = cur_state.get_file_path();
+    let path: String = if radio {
+        cur_state.radio_path.clone()
+    } else {
+        cur_state.get_file_path()
+    };
+    
     let file_path: &Path = Path::new(path.as_str());
 
     let file: BufReader<File> = BufReader::new(
@@ -195,7 +248,12 @@ pub fn on_play() -> bool{
     let file_name = file_path.file_name().unwrap().to_str().unwrap();
 
     cur_state.playing_name = String::from(file_name);
-    cur_state.set_state(PlayerState::Play);
+    if radio {
+        cur_state.set_state(PlayerState::PlayRadio);
+    } else {
+        cur_state.set_state(PlayerState::Play);
+    }
+    
     true
 }
 
@@ -213,6 +271,10 @@ pub fn on_pause() -> bool{
             audio_player.sink.pause();
             cur_state.set_state(PlayerState::Pause);
         },
+        PlayerState::PlayRadio => {
+            audio_player.sink.pause();
+            cur_state.set_state(PlayerState::PauseRadio);
+        },
         _ => {}
     }
     true
@@ -228,4 +290,13 @@ pub fn on_stop() -> bool {
     audio_player.sink.stop();
     cur_state.set_state(PlayerState::Stop);
     true
+}
+
+pub fn convert_2_radio(){
+    let mut cur_state = GLOBAL_STATE.lock().unwrap();
+    let song_name = cur_state.get_song_name();
+    let file_path = cur_state.get_file_path();
+    music2radio::to_radio(&file_path, song_name.clone());
+    let song_radio = format!("../radio_out/radio_{}.wav", song_name);
+    cur_state.radio_path = song_radio;
 }

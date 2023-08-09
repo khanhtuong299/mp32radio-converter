@@ -10,7 +10,10 @@ fn main() {
       ,api::on_drop
       ,api::play_music2
       ,api::pause_music
-      ,api::stop_music])
+      ,api::stop_music
+      ,api::convert2radio
+      ,api::on_radio
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

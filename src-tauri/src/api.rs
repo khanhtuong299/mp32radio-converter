@@ -1,4 +1,4 @@
-#[path = "music_processing.rs"] mod music_processing;
+#[path = "music_control.rs"] mod music_control;
 
 #[tauri::command]
 pub fn greet(name: &str) -> String {
@@ -15,25 +15,37 @@ pub fn greet(name: &str) -> String {
 
 #[tauri::command]
 pub fn on_drop(path: &str) -> String {
-  music_processing::reset_state();
-  music_processing::on_input(path)
+  music_control::reset_state();
+  music_control::on_input(path)
 }
 
 #[tauri::command]
 pub fn play_music2() -> bool {
-    music_processing::on_play()
+    music_control::on_play()
 }
 
 #[tauri::command]
 pub fn pause_music() -> bool {
-    music_processing::on_pause()
+    music_control::on_pause()
 }
 
 #[tauri::command]
 pub fn stop_music() -> bool {
-    music_processing::on_stop()
+    music_control::on_stop()
 }
 
+#[tauri::command]
+pub fn convert2radio() -> bool {
+    music_control::convert_2_radio();
+    true
+}
+
+#[tauri::command]
+pub fn on_radio() -> bool {
+    music_control::on_play_radio()
+}
+
+
 pub fn init_processing(){
-  music_processing::init_processing()
+  music_control::init_processing()
 }
